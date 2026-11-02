@@ -1,13 +1,11 @@
-#include "gpio.h"
-#include "rcc.h"
 #include "board.h"
-#include <stdio.h>
 
 
-
+static void APP_vErrorHandler(void);
 int main(void){
-    RCC_enuPeriphClkCtrl(BOARD_LED_RCC,RCC_ENABLE);
-    RCC_enuPeriphClkCtrl(BOARD_BTN_RCC,RCC_ENABLE);
+    
+    if(RCC_enuPeriphClkCtrl(BOARD_LED_RCC,RCC_ENABLE) != RCC_OK){APP_vErrorHandler();}
+    if(RCC_enuPeriphClkCtrl(BOARD_BTN_RCC,RCC_ENABLE) != RCC_OK){APP_vErrorHandler();}
 
 
     const GPIO_pinCfg_t LED_pin = 
@@ -30,19 +28,24 @@ int main(void){
         .speed = GPIO_SPEED_LOW,
         .pupd = BOARD_BTN_PULL,
         .af = GPIO_AF0,
-        .initState = BOARD_BTN_PRESSED // init in input is ignored
+        .initState = GPIO_PIN_STATE_LOW // init in input is ignored
     };
-    GPIO_enuPinInit(&LED_pin);
-    GPIO_enuPinInit(&BTN_pin);
+    if(GPIO_enuPinInit(&LED_pin) != GPIO_OK) {APP_vErrorHandler();}
+    if(GPIO_enuPinInit(&BTN_pin) != GPIO_OK) {APP_vErrorHandler();}
 
 
     GPIO_pinState_t status;
     while(1){
-        GPIO_enuPinRead(BTN_pin.port,BTN_pin.pin,&status);
+        if(GPIO_enuPinRead(BTN_pin.port,BTN_pin.pin,&status)!= GPIO_OK){APP_vErrorHandler();}
         if(status == BOARD_BTN_PRESSED){
-            GPIO_enuPinWrite(LED_pin.port,LED_pin.pin,BOARD_LED_ON);
+            if(GPIO_enuPinWrite(LED_pin.port,LED_pin.pin,BOARD_LED_ON)!= GPIO_OK){APP_vErrorHandler();}
         }else{
-            GPIO_enuPinWrite(LED_pin.port,LED_pin.pin,BOARD_LED_OFF);
+            if(GPIO_enuPinWrite(LED_pin.port,LED_pin.pin,BOARD_LED_OFF)!= GPIO_OK){APP_vErrorHandler();}
         }
     }
+}
+
+
+static void APP_vErrorHandler(void){
+    while(1){}
 }

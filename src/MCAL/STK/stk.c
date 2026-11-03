@@ -67,4 +67,26 @@ STK_errCode_t STK_enuDelayMs(uint32_t delayMs){
     return error;
 }
 
+STK_errCode_t STK_enuGetTicks(uint32_t *ticks){
+    STK_errCode_t error;
+    if(ticks == NULL){
+        error = STK_NULLPTR;
+    }else{
+        *ticks = STK->VAL;
+        error = STK_OK;
+    }
+    return error;
+}
 
+STK_errCode_t STK_enuStartFromMax(void){
+    STK_errCode_t error;
+    if(STK_u8InitDone != 1U){
+        error = STK_NOT_INITIALIZED;
+    }else{
+        STK->LOAD = 0x00FFFFFFU;
+        STK->VAL = 0U;
+        STK->CTRL |= (STK_1BIT_MASK << STK_CTRL_ENABLE_POS);
+        error = STK_OK;
+    }
+    return error;
+}

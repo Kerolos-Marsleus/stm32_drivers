@@ -2,6 +2,7 @@
 #define GPIO_PRIV_H
 #include "gpio.h"
 #include <stdint.h>
+#include <stddef.h>
 
 #define GPIO_2BIT_FIELD_WIDTH           2U
 #define GPIO_4BIT_FIELD_WIDTH           4U
@@ -50,5 +51,5 @@ typedef struct
     volatile uint32_t AFRL;      /* 0x20: AF for pins 0-7  */
     volatile uint32_t AFRH;      /* 0x24: AF for pins 8-15 */
 } GPIO_Reg_t;
-
+_Static_assert(offsetof(GPIO_Reg_t, AFRH) == 0x24U, "GPIO register map mismatch");
 #endif /*GPIO_PRIV_H*/

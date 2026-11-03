@@ -6,7 +6,7 @@
 #define TIME_LIMIT  50000U
 
 static const uint32_t RCC_On_bits[RCC_CLK_COUNT] = {0U, 16U, 24U};
-
+static const uint16_t RCC_ahbDividers[8] = { 2U, 4U, 8U, 16U, 64U, 128U, 256U, 512U };
 
 RCC_errCode_t RCC_enuClkCtrl(RCC_clk_t Clk, RCC_on_off_state_t State){
     // error if invalid input
@@ -284,3 +284,21 @@ RCC_errCode_t RCC_enuSysClkFreqGet(uint32_t *Ptr_Clk_freq){
     return RCC_OK;
 }
 
+RCC_errCode_t RCC_enuHclkFreqGet(uint32_t *ptr_Hclk_freq){
+    RCC_errCode_t error;
+    if(ptr_Hclk_freq == NULL){
+        error =  RCC_NULLPTR;
+    }else{
+        uint32_t freq;
+        error = RCC_enuSysClkFreqGet(&freq);
+        if(error == RCC_OK){ 
+            uint32_t Hpre_Prescale = (RCC->CFGR >> RCC_CFGR_HPRE_POS) & RCC_CFGR_HPRE_MASK;
+            if(Hpre_Prescale < RCC_HPRE_DIV_FIRST_CODE){
+                *ptr_Hclk_freq = freq;
+            }else{
+                *ptr_Hclk_freq = freq / RCC_ahbDividers[Hpre_Prescale-RCC_HPRE_DIV_FIRST_CODE];
+            }
+        }
+    }
+    return error;
+}

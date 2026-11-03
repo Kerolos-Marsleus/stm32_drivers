@@ -12,6 +12,7 @@
 #define RCC_RST_LOWPOWER    (1U << 6)   /* CSR bit 31: LPWRRSTF */
 
 
+
 typedef enum
 {
     RCC_PLLP_DIV2 = 0U,
@@ -156,4 +157,6 @@ RCC_errCode_t RCC_enuAHBPrescalerSet(RCC_ahbDiv_t Div);
 RCC_errCode_t RCC_enuAPBPrescalerSet(RCC_bus_t Bus, RCC_apbDiv_t Div);
 RCC_errCode_t RCC_enuPLLConfig(const RCC_pllCfg_t *Ptr_CFG);
 RCC_errCode_t RCC_enuSysClkFreqGet(uint32_t *Ptr_Clk_freq);
+RCC_errCode_t RCC_enuHclkFreqGet(uint32_t *ptr_Hclk_freq);
+
 #endif  /*RCC_H*/

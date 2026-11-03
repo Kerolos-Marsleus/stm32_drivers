@@ -34,6 +34,7 @@
 #define RCC_PLLCFGR_Q_POS       24U
 #define RCC_PLLCFGR_Q_MASK      0xFU 
 
+#define RCC_HPRE_DIV_FIRST_CODE 8U
 
 typedef struct
 {
@@ -68,7 +69,7 @@ typedef struct
     volatile uint32_t DCKCFGR;
 } RCC_Reg_t;
 
-
+_Static_assert(offsetof(RCC_Reg_t, DCKCFGR) == 0x8CU, "RCC register map mismatch");
 
 #ifdef UNIT_TEST
 extern RCC_Reg_t g_fakeRCC;

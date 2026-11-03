@@ -1,4 +1,4 @@
-#include "HLED.h"
+#include "hled.h"
 #include "board.h"
 
 const HLED_cfg_t HLED_cfg[HLED_COUNT] = 

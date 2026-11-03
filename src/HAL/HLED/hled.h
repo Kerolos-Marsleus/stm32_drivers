@@ -2,7 +2,7 @@
 #define HLED_H
 
 #include "gpio.h"
-#include "HLED_cfg.h"
+#include "hled_cfg.h"
 
 typedef struct
 {

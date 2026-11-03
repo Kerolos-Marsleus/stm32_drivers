@@ -7,6 +7,7 @@
 #define GPIO_4BIT_FIELD_WIDTH           4U
 #define GPIO_BSRR_RESET_OFFSET          16U
 #define GPIO_IDR_MASK                   0x1U
+#define GPIO_1BIT_MASK                  1U
 #define GPIO_AFR_PINS_PER_REG           8U
 
 #define GPIOA_BASE   0x40020000U

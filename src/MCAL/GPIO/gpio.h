@@ -94,6 +94,7 @@ typedef struct
 GPIO_errCode_t GPIO_enuCfgPinMode(GPIO_port_t port, GPIO_pin_t pin, GPIO_mode_t mode);
 GPIO_errCode_t GPIO_enuPinWrite(GPIO_port_t port, GPIO_pin_t pin,GPIO_pinState_t state);
 GPIO_errCode_t GPIO_enuPinRead(GPIO_port_t port, GPIO_pin_t pin, GPIO_pinState_t* state);
+GPIO_errCode_t GPIO_enuPinToggle(GPIO_port_t port, GPIO_pin_t pin);
 GPIO_errCode_t GPIO_enuCfgSpeed(GPIO_port_t port, GPIO_pin_t pin,GPIO_speed_t speed);
 GPIO_errCode_t GPIO_enuCfgPUPD(GPIO_port_t port, GPIO_pin_t pin,GPIO_pupd_t pupd);
 GPIO_errCode_t GPIO_enuCfgOutType(GPIO_port_t port, GPIO_pin_t pin,GPIO_outputType_t type);

@@ -68,6 +68,21 @@ GPIO_errCode_t GPIO_enuPinRead(GPIO_port_t port, GPIO_pin_t pin, GPIO_pinState_t
     return error;
 }
 
+GPIO_errCode_t GPIO_enuPinToggle(GPIO_port_t port, GPIO_pin_t pin){
+    GPIO_errCode_t error;
+    if((uint32_t) port >= GPIO_PORT_COUNT){
+        error = GPIO_INVALID_ARGUMENT;
+    }else if( (uint32_t) pin >= GPIO_PIN_COUNT){
+        error = GPIO_INVALID_ARGUMENT;
+    }else{
+        uint32_t state = ((GPIO_ports[port]->ODR) >> (uint32_t)pin) & GPIO_1BIT_MASK;
+        state ^= 1U;
+        error = GPIO_enuPinWrite(port,pin,(GPIO_pinState_t)state);
+    }
+    return error;
+}
+
+
 GPIO_errCode_t GPIO_enuCfgSpeed(GPIO_port_t port, GPIO_pin_t pin,GPIO_speed_t speed){
     GPIO_errCode_t error;
     if((uint32_t) port >= GPIO_PORT_COUNT){

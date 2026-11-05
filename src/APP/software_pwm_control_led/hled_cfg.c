@@ -11,4 +11,68 @@ const HLED_cfg_t HLED_cfg[HLED_COUNT] =
         .speed              = GPIO_SPEED_LOW,
         .activeState        = BOARD_LED_ON
     },
+    [HLED_PA0] = 
+    {
+        .port               = GPIO_PORTA,
+        .pin                = GPIO_PIN0,
+        .outType            = GPIO_OUTPUT_PUSH_PULL,
+        .speed              = GPIO_SPEED_LOW,
+        .activeState        = GPIO_PIN_STATE_HIGH
+    },
+    [HLED_PA1] = 
+    {
+        .port               = GPIO_PORTA,
+        .pin                = GPIO_PIN1,
+        .outType            = GPIO_OUTPUT_PUSH_PULL,
+        .speed              = GPIO_SPEED_LOW,
+        .activeState        = GPIO_PIN_STATE_HIGH
+    },
+    [HLED_PA2] = 
+    {
+        .port               = GPIO_PORTA,
+        .pin                = GPIO_PIN2,
+        .outType            = GPIO_OUTPUT_PUSH_PULL,
+        .speed              = GPIO_SPEED_LOW,
+        .activeState        = GPIO_PIN_STATE_HIGH
+    },
+    [HLED_PA3] = 
+    {
+        .port               = GPIO_PORTA,
+        .pin                = GPIO_PIN3,
+        .outType            = GPIO_OUTPUT_PUSH_PULL,
+        .speed              = GPIO_SPEED_LOW,
+        .activeState        = GPIO_PIN_STATE_HIGH
+    },
+    [HLED_PA4] = 
+    {
+        .port               = GPIO_PORTA,
+        .pin                = GPIO_PIN4,
+        .outType            = GPIO_OUTPUT_PUSH_PULL,
+        .speed              = GPIO_SPEED_LOW,
+        .activeState        = GPIO_PIN_STATE_HIGH
+    },
+    [HLED_PA5] = 
+    {
+        .port               = GPIO_PORTA,
+        .pin                = GPIO_PIN5,
+        .outType            = GPIO_OUTPUT_PUSH_PULL,
+        .speed              = GPIO_SPEED_LOW,
+        .activeState        = GPIO_PIN_STATE_HIGH
+    },
+    [HLED_PA6] = 
+    {
+        .port               = GPIO_PORTA,
+        .pin                = GPIO_PIN6,
+        .outType            = GPIO_OUTPUT_PUSH_PULL,
+        .speed              = GPIO_SPEED_LOW,
+        .activeState        = GPIO_PIN_STATE_HIGH
+    },
+    [HLED_PA7] = 
+    {
+        .port               = GPIO_PORTA,
+        .pin                = GPIO_PIN7,
+        .outType            = GPIO_OUTPUT_PUSH_PULL,
+        .speed              = GPIO_SPEED_LOW,
+        .activeState        = GPIO_PIN_STATE_HIGH
+    },
 };

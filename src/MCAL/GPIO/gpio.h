@@ -1,7 +1,11 @@
 #ifndef GPIO_H
 #define GPIO_H
-
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 typedef enum{
     GPIO_OK,
@@ -102,4 +106,9 @@ GPIO_errCode_t GPIO_enuCfgAlternativeFunc(GPIO_port_t port, GPIO_pin_t pin,GPIO_
 GPIO_errCode_t GPIO_enuPinInit(const GPIO_pinCfg_t *Ptr_Cfg);
 GPIO_errCode_t GPIO_enuPortWrite(GPIO_port_t port, uint16_t value);
 GPIO_errCode_t GPIO_enuPortRead(GPIO_port_t port, uint16_t *value);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif  /*GPIO_H*/

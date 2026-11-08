@@ -11,7 +11,7 @@
 #define STK_MODE_POLLING            0U
 #define STK_MODE_INTERRUPT          1U
 // user choice
-#define STK_MODE                    STK_MODE_POLLING      
+#define STK_MODE                    STK_MODE_INTERRUPT      
 
 
 

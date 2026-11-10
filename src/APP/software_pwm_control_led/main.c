@@ -107,25 +107,48 @@ int main(void){
                         {
                         case APP_BTN_SEL:
                             if(mode == APP_MODE_SELECT){
-                                Selected_led = (Selected_led +1) % APP_LEDS;
+                                if(Selected_led == APP_LEDS-1U){
+                                    mode = APP_MODE_DEFAULT;
+                                    Selected_led = 0U;
+                                }else{
+                                    Selected_led++;
+                                }
+                            
                             }else if (mode == APP_MODE_DEFAULT){
                                 mode = APP_MODE_SELECT;
+                                Selected_led = 0U;
                             }
 
                             break;
                         case APP_BTN_PLUS:
-                            for(uint32_t i = 0U; i < APP_LEDS; i++){
-                                if(levels[i] >= 0 && levels[i] <10){
-                                    levels[i]++;
+                            if(mode == APP_MODE_SELECT){
+                                if(levels[Selected_led] >= 10){
+                                    levels[Selected_led] = 10;
+                                }else{
+                                    levels[Selected_led]++;
+                                }
+                            }else if(mode == APP_MODE_DEFAULT){
+                                for(uint32_t i = 0U; i < APP_LEDS; i++){
+                                    if(levels[i] >= 0 && levels[i] <10){
+                                        levels[i]++;
+                                    }
                                 }
                             }
                             break;
                         case APP_BTN_MINUS:
-                            for(uint32_t led = 0U; led < APP_LEDS; led++){
-                                if(levels[led] > 0 && levels[led] <=10){
-                                    levels[led]--;
+                            if(mode == APP_MODE_SELECT){
+                                    if(levels[Selected_led] == 0){
+                                    levels[Selected_led] = 0;
+                                    }else{
+                                        levels[Selected_led]--;
+                                    }
+                                }else if(mode == APP_MODE_DEFAULT){
+                                    for(uint32_t led = 0U; led < APP_LEDS; led++){
+                                        if(levels[led] > 0 && levels[led] <=10){
+                                            levels[led]--;
+                                        }
+                                    }
                                 }
-                            }
                             break;
                         default:
                             break;

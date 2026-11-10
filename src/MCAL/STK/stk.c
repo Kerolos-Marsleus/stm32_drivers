@@ -32,23 +32,23 @@ STK_errCode_t STK_enuInit(void){
     uint32_t freq;
     if(RCC_enuHclkFreqGet(&freq) != RCC_OK){
             error = STK_RCC_ERROR;
-        }else{
-            if(STK_CLK_SOURCE == STK_CLK_AHB_DIV8){
-                freq /= 8U;
-            }
-            uint32_t loc_ticksPerMs = freq / 1000U;
-            if((loc_ticksPerMs - 1U) > STK_LOAD_MAX){
-                // this will not happen on these board
-                // but for safety reasons if the clock became 0
-                // it will overflow and give a very large number 0xFFFFFFFF
-                error = STK_LOAD_OVERFLOW;
-            }else{
-                STK->LOAD = loc_ticksPerMs -1U;
-                STK->VAL = 0U;
-                STK_u8InitDone = 1U;
-                error = STK_OK;
-            }
+    }else{
+        if(STK_CLK_SOURCE == STK_CLK_AHB_DIV8){
+            freq /= 8U;
         }
+        uint32_t loc_ticksPerMs = freq / 1000U;
+        if((loc_ticksPerMs - 1U) > STK_LOAD_MAX){
+            // this will not happen on these board
+            // but for safety reasons if the clock became 0
+            // it will overflow and give a very large number 0xFFFFFFFF
+            error = STK_LOAD_OVERFLOW;
+        }else{
+            STK->LOAD = loc_ticksPerMs -1U;
+            STK->VAL = 0U;
+            STK_u8InitDone = 1U;
+            error = STK_OK;
+        }
+    }
     return error;
 }
 

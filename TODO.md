@@ -11,3 +11,4 @@
 - [ ] `Elapsed_20ms` → APP_DEBOUNCE_TICKS
 - [ ] Break-it: buttons with GPIO_PUPD_NONE
 - [ ] Interrupt mode: rewrite STK_enuDelayMs to use STK_u32TimeMs (no LOAD changes); wrap StartFromMax/GetTicks in #if POLLING
+- [ ] Learn the build: platformio.ini, envs, -I, build_src_filter, compile vs link

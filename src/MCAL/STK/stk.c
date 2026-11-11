@@ -141,7 +141,7 @@ STK_errCode_t STK_enuStartFromMax(void){
 
 void SysTick_Handler(void){
     STK_u32TimeMs++;
-    if(STK_cbf != NULL){
+    if((STK_cbf != NULL) && (STK_u32PeriodMs != 0U)){
         if((STK_u32TimeMs - STK_u32LastCallMs) >= STK_u32PeriodMs){
             STK_u32LastCallMs = STK_u32TimeMs;
             STK_cbf();
@@ -160,9 +160,17 @@ STK_errCode_t STK_enuSetCallback(STK_cbf_t cbf){
     return error;
 }
 STK_errCode_t STK_enuNotifyOnMs(uint32_t delayMs){
-    STK_u32LastCallMs = STK_u32TimeMs;
-    STK_u32PeriodMs = delayMs;
-    return STK_OK;
+    STK_errCode_t error;
+    if(STK_u8InitDone != 1U){
+        error = STK_NOT_INITIALIZED;
+    }else if(delayMs == 0U){
+        error = STK_INVALID_PERIOD;
+    }else{
+        STK_u32LastCallMs = STK_u32TimeMs;
+        STK_u32PeriodMs = delayMs;
+    error = STK_OK;
+    }
+    return error;
 }
 
 

@@ -14,6 +14,7 @@ typedef enum
     STK_LOAD_OVERFLOW,
     STK_NOT_INITIALIZED,
     STK_RCC_ERROR,
+    STK_INVALID_PERIOD,
     STK_ERROR_COUNT
 } STK_errCode_t;
 

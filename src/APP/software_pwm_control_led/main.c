@@ -71,7 +71,8 @@ int main(void){
         btnStable[i] = GPIO_PIN_STATE_HIGH;
         btnTimerStart[i] = start;
     }
-    
+    uint32_t number_of_10ms = 0U;
+    uint32_t number_of_10ms_for_5sec = 0U;
     APP_mode_t mode = APP_MODE_DEFAULT;
     uint32_t Selected_led = 0;
     while(1){
@@ -79,14 +80,29 @@ int main(void){
         uint32_t elapsed = (start - end) & STK_MAX;
         for(uint32_t i = 0U; i < 8U; i++){
             HLED_id_t led = (HLED_id_t)(HLED_PA0 + i);
-            if(elapsed < (levels[i] * ELAPSED_1ms)){
-                HLED_enuTurnOn(led);
-            }else{
+            if((mode == APP_MODE_SELECT) && (i == Selected_led) && (number_of_10ms < 25U)){
                 HLED_enuTurnOff(led);
+                
+            }else{
+                if(elapsed < (levels[i] * ELAPSED_1ms)){
+                    HLED_enuTurnOn(led);
+                }else{
+                    HLED_enuTurnOff(led);
+                }
             }
+        }
+        if(number_of_10ms_for_5sec == 500){
+            mode = APP_MODE_DEFAULT;
         }
         if(elapsed > ELAPSED_10ms){
             start = end;
+            number_of_10ms++;
+            if(mode == APP_MODE_SELECT){
+                number_of_10ms_for_5sec++;
+            }
+            if(number_of_10ms== 50){
+                number_of_10ms = 0;
+            }
         }
         
         GPIO_pinState_t BtnState;
@@ -102,6 +118,7 @@ int main(void){
                 if(BtnState != btnStable[i]){
                     btnStable[i] = BtnState;
                     if(btnStable[i] == GPIO_PIN_STATE_LOW){
+                        number_of_10ms_for_5sec = 0U;
                         // switch case to do the switch or + or -
                         switch (i)
                         {
@@ -118,7 +135,6 @@ int main(void){
                                 mode = APP_MODE_SELECT;
                                 Selected_led = 0U;
                             }
-
                             break;
                         case APP_BTN_PLUS:
                             if(mode == APP_MODE_SELECT){
@@ -149,6 +165,7 @@ int main(void){
                                         }
                                     }
                                 }
+                                
                             break;
                         default:
                             break;

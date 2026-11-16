@@ -2,6 +2,9 @@
 #include <stddef.h>
 #define HSWITCH_STABLE_READINGS     5U
 #define HSWITCH_HISTORY_MASK        ((1U << HSWITCH_STABLE_READINGS) -1U)
+
+_Static_assert(HSWITCH_STABLE_READINGS <= 8U, "history is a uint8_t: max 8 readings");
+
 extern const HSWITCH_cfg_t HSWITCH_cfg[HSWITCH_COUNT];
 static HSWITCH_state_t HSWITCH_state[HSWITCH_COUNT];        /* debounced state reported to the app   */
 static uint8_t HSWITCH_u8History[HSWITCH_COUNT];            /* last readings, newest in bit 0 */

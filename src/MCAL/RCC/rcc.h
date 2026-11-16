@@ -2,6 +2,10 @@
 #define RCC_H
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define RCC_PERIPH(bus, bit)   ((((uint32_t)(bus)) << 5U) | ((uint32_t)(bit)))
 #define RCC_RST_BROWNOUT    (1U << 0)   /* CSR bit 25: BORRSTF  */
 #define RCC_RST_PIN         (1U << 1)   /* CSR bit 26: PINRSTF  */
@@ -158,5 +162,9 @@ RCC_errCode_t RCC_enuAPBPrescalerSet(RCC_bus_t Bus, RCC_apbDiv_t Div);
 RCC_errCode_t RCC_enuPLLConfig(const RCC_pllCfg_t *Ptr_CFG);
 RCC_errCode_t RCC_enuSysClkFreqGet(uint32_t *Ptr_Clk_freq);
 RCC_errCode_t RCC_enuHclkFreqGet(uint32_t *ptr_Hclk_freq);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /*RCC_H*/

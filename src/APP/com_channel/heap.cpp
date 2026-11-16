@@ -4,7 +4,11 @@ constexpr size_t HEAP_SIZE = 2048U;
 
 static char heap[HEAP_SIZE];
 static char* ptr = heap;
+
 void* operator new(size_t size){
+    if((ptr-heap + size) > HEAP_SIZE ){
+        return nullptr;
+    }
     char* temp = ptr;
     ptr+=size;
     return temp;

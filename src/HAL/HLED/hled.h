@@ -4,6 +4,10 @@
 #include "gpio.h"
 #include "hled_cfg.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
     GPIO_port_t        port;
@@ -26,5 +30,9 @@ HLED_errCode_t HLED_enuInit(void);
 HLED_errCode_t HLED_enuTurnOn(HLED_id_t id);
 HLED_errCode_t HLED_enuTurnOff(HLED_id_t id);
 HLED_errCode_t HLED_enuToggle(HLED_id_t id);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*HLED_H*/

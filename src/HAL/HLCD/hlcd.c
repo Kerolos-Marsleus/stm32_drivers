@@ -2,6 +2,10 @@
 #include "hlcd_priv.h"
 extern const HLCD_pinCfg_t HLCD_pinCfg[HLCD_PIN_COUNT];
 
+
+static HLCD_errCode_t HLCD_enuSendByte(uint8_t byte, GPIO_pinState_t rs);
+static HLCD_errCode_t HLCD_enuInitPins(void);
+
 typedef enum
 {
     HLCD_INIT_NO_REQ = 0,           /* nobody asked for init yet                 */

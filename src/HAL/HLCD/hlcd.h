@@ -3,7 +3,6 @@
 #include "gpio.h"
 #include "hlcd_cfg.h"
 
-#define HLCD_DATA_PINS 8U
 typedef enum
 {
     HLCD_OK = 0,
@@ -20,8 +19,6 @@ typedef struct
 
 
 
-static HLCD_errCode_t HLCD_enuSendByte(uint8_t byte, GPIO_pinState_t rs);
-static HLCD_errCode_t HLCD_enuInitPins(void);
 void HLCD_vRunnable(void);
 HLCD_errCode_t HLCD_enuInit(void);
 #endif /*HLCD_H*/

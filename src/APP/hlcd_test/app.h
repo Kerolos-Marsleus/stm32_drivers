@@ -4,5 +4,4 @@
 
 void APP_vInit(void);
 void APP_vErrorHandler(void);
-void APP_vButtonToLed(void);
 #endif /*APP_H*/

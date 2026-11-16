@@ -1,11 +1,10 @@
 #include "hlcd.h"
 #include "hlcd_priv.h"
-extern const HLCD_pinCfg_t HLCD_pinCfg[HLCD_PIN_COUNT];
+extern const HLCD_cfg_t HLCD_cfg[HLCD_COUNT];
 
 
-static HLCD_errCode_t HLCD_enuSendByte(uint8_t byte, GPIO_pinState_t rs);
-static HLCD_errCode_t HLCD_enuInitPins(void);
-
+static HLCD_errCode_t HLCD_enuSendByte(HLCD_id_t id,uint8_t byte, GPIO_pinState_t rs);
+static HLCD_errCode_t HLCD_enuInitPins(HLCD_id_t id);
 typedef enum
 {
     HLCD_INIT_NO_REQ = 0,           /* nobody asked for init yet                 */
@@ -21,15 +20,15 @@ typedef enum
     HLCD_INIT_DONE
 } HLCD_initState_t;
 
-static HLCD_initState_t HLCD_initState = HLCD_INIT_NO_REQ;
+static HLCD_initState_t HLCD_initState[HLCD_COUNT];
 
-static HLCD_errCode_t HLCD_enuInitPins(void){
+static HLCD_errCode_t HLCD_enuInitPins(HLCD_id_t id){
     HLCD_errCode_t error = HLCD_OK;
     for(uint32_t i = 0U; (i< HLCD_PIN_COUNT) && (error == HLCD_OK) ; i++){
         GPIO_pinCfg_t pinCfg = 
         {
-            .port           = HLCD_pinCfg[i].port,
-            .pin            = HLCD_pinCfg[i].pin,
+            .port           = HLCD_cfg[id].pins[i].port,
+            .pin            = HLCD_cfg[id].pins[i].pin,
             .outType        = GPIO_OUTPUT_PUSH_PULL,
             .af             = GPIO_AF0,
             .speed          = GPIO_SPEED_LOW,
@@ -46,27 +45,29 @@ static HLCD_errCode_t HLCD_enuInitPins(void){
 
 HLCD_errCode_t HLCD_enuInit(void){
     HLCD_errCode_t error = HLCD_OK;
-    if(HLCD_initState != HLCD_INIT_NO_REQ){
-        error = HLCD_BUSY;
-    }else{
-        HLCD_initState = HLCD_INIT_PINS;
+    for(HLCD_id_t id = 0U; id < HLCD_COUNT; id++){
+        if(HLCD_initState[id] != HLCD_INIT_NO_REQ){
+            error = HLCD_BUSY;
+        }else{
+            HLCD_initState[id] = HLCD_INIT_PINS;
+        }
     }
     return error;
 }
 
-static HLCD_errCode_t HLCD_enuSendByte(uint8_t byte, GPIO_pinState_t rs){
+static HLCD_errCode_t HLCD_enuSendByte(HLCD_id_t id,uint8_t byte, GPIO_pinState_t rs){
     HLCD_errCode_t error = HLCD_OK;
-    if(GPIO_enuPinWrite(HLCD_pinCfg[HLCD_PIN_RS].port,HLCD_pinCfg[HLCD_PIN_RS].pin,rs) !=GPIO_OK){
+    if(GPIO_enuPinWrite(HLCD_cfg[id].pins[HLCD_PIN_RS].port,HLCD_cfg[id].pins[HLCD_PIN_RS].pin,rs) !=GPIO_OK){
         error = HLCD_GPIO_ERROR;
     }
     for(uint32_t i = 0U; (i < HLCD_DATA_PINS) && (error == HLCD_OK); i++){
         GPIO_pinState_t level = (GPIO_pinState_t)((byte >> i) & 1U);
-        if(GPIO_enuPinWrite(HLCD_pinCfg[i + HLCD_PIN_D0].port,HLCD_pinCfg[i + HLCD_PIN_D0].pin,level)!=GPIO_OK){
+        if(GPIO_enuPinWrite(HLCD_cfg[id].pins[i + HLCD_PIN_D0].port,HLCD_cfg[id].pins[i + HLCD_PIN_D0].pin,level)!=GPIO_OK){
         error = HLCD_GPIO_ERROR;
         }
     }
     if(error == HLCD_OK){
-        if(GPIO_enuPinWrite(HLCD_pinCfg[HLCD_PIN_E].port,HLCD_pinCfg[HLCD_PIN_E].pin,GPIO_PIN_STATE_HIGH) != GPIO_OK){
+        if(GPIO_enuPinWrite(HLCD_cfg[id].pins[HLCD_PIN_E].port,HLCD_cfg[id].pins[HLCD_PIN_E].pin,GPIO_PIN_STATE_HIGH) != GPIO_OK){
             error = HLCD_GPIO_ERROR;
         }
     }
@@ -74,95 +75,97 @@ static HLCD_errCode_t HLCD_enuSendByte(uint8_t byte, GPIO_pinState_t rs){
 }
 
 void HLCD_vRunnable(void){
-    switch(HLCD_initState)
-    {
-        case HLCD_INIT_PINS:
+    for(HLCD_id_t id = 0U; id < HLCD_COUNT; id++){
+        switch(HLCD_initState[id])
         {
-            if(HLCD_enuInitPins() == HLCD_OK){
-                HLCD_initState = HLCD_INIT_FUNCTION_SET;
-            }
-            break;
-        }
-        case HLCD_INIT_FUNCTION_SET:
-        {
-            uint8_t cmd = HLCD_CMD_FUNCTION_SET
-                        | (HLCD_DL_8BIT << HLCD_DL_POS)
-                        | (HLCD_LINES   << HLCD_N_POS)
-                        | (HLCD_FONT    << HLCD_F_POS);
-            if (HLCD_enuSendByte(cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
-                {
-                    HLCD_initState = HLCD_INIT_FUNCTION_SET_WAIT;
+            case HLCD_INIT_PINS:
+            {
+                if(HLCD_enuInitPins(id) == HLCD_OK){
+                    HLCD_initState[id] = HLCD_INIT_FUNCTION_SET;
                 }
                 break;
-        }
-        case HLCD_INIT_FUNCTION_SET_WAIT:
-        {
-            if(GPIO_enuPinWrite(HLCD_pinCfg[HLCD_PIN_E].port,HLCD_pinCfg[HLCD_PIN_E].pin,GPIO_PIN_STATE_LOW) == GPIO_OK){
-                HLCD_initState = HLCD_INIT_DISPLAY_ON_OFF;
             }
-            break;
-        }
-        case HLCD_INIT_DISPLAY_ON_OFF:
-        {
-            uint8_t cmd = HLCD_CMD_DISPLAY_CTRL
-                        | (HLCD_ON          << HLCD_D_POS)
-                        | (HLCD_CURSOR      << HLCD_C_POS)
-                        | (HLCD_BLINK       << HLCD_B_POS);
-            if (HLCD_enuSendByte(cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
-                {
-                    HLCD_initState = HLCD_INIT_DISPLAY_ON_OFF_WAIT;
+            case HLCD_INIT_FUNCTION_SET:
+            {
+                uint8_t cmd = HLCD_CMD_FUNCTION_SET
+                            | (HLCD_cfg[id].mode    << HLCD_DL_POS)
+                            | (HLCD_cfg[id].lines   << HLCD_N_POS)
+                            | (HLCD_cfg[id].font    << HLCD_F_POS);
+                if (HLCD_enuSendByte(id,cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
+                    {
+                        HLCD_initState[id] = HLCD_INIT_FUNCTION_SET_WAIT;
+                    }
+                    break;
+            }
+            case HLCD_INIT_FUNCTION_SET_WAIT:
+            {
+                if(GPIO_enuPinWrite(HLCD_cfg[id].pins[HLCD_PIN_E].port,HLCD_cfg[id].pins[HLCD_PIN_E].pin,GPIO_PIN_STATE_LOW) == GPIO_OK){
+                    HLCD_initState[id] = HLCD_INIT_DISPLAY_ON_OFF;
                 }
                 break;
-        }
-        case HLCD_INIT_DISPLAY_ON_OFF_WAIT:
-        {
-            if(GPIO_enuPinWrite(HLCD_pinCfg[HLCD_PIN_E].port,HLCD_pinCfg[HLCD_PIN_E].pin,GPIO_PIN_STATE_LOW) == GPIO_OK){
-                HLCD_initState = HLCD_INIT_DISPLAY_CLEAR;
             }
-            break;
-        }
-        case HLCD_INIT_DISPLAY_CLEAR:
-        {
-            uint8_t cmd = HLCD_CMD_CLEAR;
-            if (HLCD_enuSendByte(cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
-                {
-                    HLCD_initState = HLCD_INIT_DISPLAY_CLEAR_WAIT;
+            case HLCD_INIT_DISPLAY_ON_OFF:
+            {
+                uint8_t cmd = HLCD_CMD_DISPLAY_CTRL
+                            | (HLCD_ON                  << HLCD_D_POS)
+                            | (HLCD_cfg[id].cursor      << HLCD_C_POS)
+                            | (HLCD_cfg[id].blink       << HLCD_B_POS);
+                if (HLCD_enuSendByte(id,cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
+                    {
+                        HLCD_initState[id] = HLCD_INIT_DISPLAY_ON_OFF_WAIT;
+                    }
+                    break;
+            }
+            case HLCD_INIT_DISPLAY_ON_OFF_WAIT:
+            {
+                if(GPIO_enuPinWrite(HLCD_cfg[id].pins[HLCD_PIN_E].port,HLCD_cfg[id].pins[HLCD_PIN_E].pin,GPIO_PIN_STATE_LOW) == GPIO_OK){
+                    HLCD_initState[id] = HLCD_INIT_DISPLAY_CLEAR;
                 }
                 break;
-        }
-        case HLCD_INIT_DISPLAY_CLEAR_WAIT:
-        {
-            if(GPIO_enuPinWrite(HLCD_pinCfg[HLCD_PIN_E].port,HLCD_pinCfg[HLCD_PIN_E].pin,GPIO_PIN_STATE_LOW) == GPIO_OK){
-                HLCD_initState = HLCD_INIT_ENTRY_MODE_SET;
             }
-            break;
-        }
-        case HLCD_INIT_ENTRY_MODE_SET:
-        {
-            uint8_t cmd = HLCD_CMD_ENTRY_MODE
-                        | (HLCD_ENTRY_DIRECTION         << HLCD_ID_POS)
-                        | (HLCD_DISPLAY_SHIFT                  << HLCD_SH_POS);
-            if (HLCD_enuSendByte(cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
-                {
-                    HLCD_initState = HLCD_INIT_ENTRY_MODE_SET_WAIT;
+            case HLCD_INIT_DISPLAY_CLEAR:
+            {
+                uint8_t cmd = HLCD_CMD_CLEAR;
+                if (HLCD_enuSendByte(id,cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
+                    {
+                        HLCD_initState[id] = HLCD_INIT_DISPLAY_CLEAR_WAIT;
+                    }
+                    break;
+            }
+            case HLCD_INIT_DISPLAY_CLEAR_WAIT:
+            {
+                if(GPIO_enuPinWrite(HLCD_cfg[id].pins[HLCD_PIN_E].port,HLCD_cfg[id].pins[HLCD_PIN_E].pin,GPIO_PIN_STATE_LOW) == GPIO_OK){
+                    HLCD_initState[id] = HLCD_INIT_ENTRY_MODE_SET;
                 }
                 break;
-        }
-        case HLCD_INIT_ENTRY_MODE_SET_WAIT: 
-        {
-            if(GPIO_enuPinWrite(HLCD_pinCfg[HLCD_PIN_E].port,HLCD_pinCfg[HLCD_PIN_E].pin,GPIO_PIN_STATE_LOW) == GPIO_OK){
-                HLCD_initState = HLCD_INIT_DONE;
             }
-            break;
-        }
-        case HLCD_INIT_DONE:
-        {
-            /* nothing yet: later, the writing machine runs here */
-            break;
-        }
-        default:
-        {
-            break;
+            case HLCD_INIT_ENTRY_MODE_SET:
+            {
+                uint8_t cmd = HLCD_CMD_ENTRY_MODE
+                            | (HLCD_cfg[id].entryDirection          << HLCD_ID_POS)
+                            | (HLCD_cfg[id].displayShift            << HLCD_SH_POS);
+                if (HLCD_enuSendByte(id,cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
+                    {
+                        HLCD_initState[id] = HLCD_INIT_ENTRY_MODE_SET_WAIT;
+                    }
+                    break;
+            }
+            case HLCD_INIT_ENTRY_MODE_SET_WAIT: 
+            {
+                if(GPIO_enuPinWrite(HLCD_cfg[id].pins[HLCD_PIN_E].port,HLCD_cfg[id].pins[HLCD_PIN_E].pin,GPIO_PIN_STATE_LOW) == GPIO_OK){
+                    HLCD_initState[id] = HLCD_INIT_DONE;
+                }
+                break;
+            }
+            case HLCD_INIT_DONE:
+            {
+                /* nothing yet: later, the writing machine runs here */
+                break;
+            }
+            default:
+            {
+                break;
+            }
         }
     }
 }

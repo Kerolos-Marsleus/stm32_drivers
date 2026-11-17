@@ -4,7 +4,7 @@
 
 typedef enum
 {
-    SCHED_RUN_CHECK_BTNS = 0, /* highest pri*/
+    SCHED_RUN_UPTIME = 0, /* highest pri*/
     SCHED_RUN_HLCD,
     SCHED_RUNNABLE_COUNT
 }SCHED_runnableId_t;

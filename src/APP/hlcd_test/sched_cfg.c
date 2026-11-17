@@ -1,15 +1,14 @@
 #include "sched.h"
 #include "sched_cfg.h"
 #include "app.h"
-#include "hswitch.h"
 #include "hlcd.h"
 const SCHED_runnableCfg_t SCHED_cfg[SCHED_RUNNABLE_COUNT] = 
 {
-    [SCHED_RUN_CHECK_BTNS] = 
+    [SCHED_RUN_UPTIME] = 
     {
-        .func = HSWITCH_vRunnable,
+        .func = APP_vUptime,
         .firstDelayMs = 0U,
-        .periodMs = 5U
+        .periodMs = 1000U
     },
     [SCHED_RUN_HLCD] = 
     {

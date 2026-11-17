@@ -4,8 +4,8 @@
 
 typedef enum
 {
-    HLCD_INIT_NO_REQ = 0,        /* nobody asked for init yet                 */
-    HLCD_INIT_PINS,                            
+    HLCD_INIT_NO_REQ = 0, /* nobody asked for init yet                 */
+    HLCD_INIT_PINS,
     HLCD_INIT_NIBBLE,
     HLCD_INIT_NIBBLE_LATCH,
     HLCD_INIT_DONE
@@ -15,8 +15,8 @@ typedef enum
 {
     HLCD_DATA_STATE_SEND = 0,
     HLCD_DATA_STATE_LATCH,
-    HLCD_DATA_STATE_SEND_LOW, 
-    HLCD_DATA_STATE_LATCH_LOW, 
+    HLCD_DATA_STATE_SEND_LOW,
+    HLCD_DATA_STATE_LATCH_LOW,
     HLCD_DATA_STATE_COUNT
 } HLCD_dataState_t;
 
@@ -42,6 +42,9 @@ static const uint8_t HLCD_lineBase[] = {
     HLCD_LINE1_ADDR,
     HLCD_LINE2_ADDR};
 static HLCD_dataState_t HLCD_dataState[HLCD_COUNT];
+
+static uint8_t HLCD_txLowNibble[HLCD_COUNT];
+static GPIO_pinState_t HLCD_txRs[HLCD_COUNT];
 
 static HLCD_errCode_t HLCD_enuInitPins(HLCD_id_t id)
 {
@@ -95,21 +98,25 @@ HLCD_errCode_t HLCD_enuInit(void)
         else
         {
             HLCD_initState[id] = HLCD_INIT_PINS;
-            if(error == HLCD_OK){
+            if (error == HLCD_OK)
+            {
                 uint8_t cmd = HLCD_CMD_FUNCTION_SET | (HLCD_cfg[id].mode << HLCD_DL_POS) | (HLCD_cfg[id].lines << HLCD_N_POS) | (HLCD_cfg[id].font << HLCD_F_POS);
-                error = HLCD_enuQueuePush(id,cmd,GPIO_PIN_STATE_LOW);
+                error = HLCD_enuQueuePush(id, cmd, GPIO_PIN_STATE_LOW);
             }
-            if(error == HLCD_OK){
+            if (error == HLCD_OK)
+            {
                 uint8_t cmd = HLCD_CMD_DISPLAY_CTRL | (HLCD_ON << HLCD_D_POS) | (HLCD_cfg[id].cursor << HLCD_C_POS) | (HLCD_cfg[id].blink << HLCD_B_POS);
-                error = HLCD_enuQueuePush(id,cmd,GPIO_PIN_STATE_LOW);
+                error = HLCD_enuQueuePush(id, cmd, GPIO_PIN_STATE_LOW);
             }
-            if(error == HLCD_OK){
+            if (error == HLCD_OK)
+            {
                 uint8_t cmd = HLCD_CMD_CLEAR;
-                error = HLCD_enuQueuePush(id,cmd,GPIO_PIN_STATE_LOW);
+                error = HLCD_enuQueuePush(id, cmd, GPIO_PIN_STATE_LOW);
             }
-            if(error == HLCD_OK){
+            if (error == HLCD_OK)
+            {
                 uint8_t cmd = HLCD_CMD_ENTRY_MODE | (HLCD_cfg[id].entryDirection << HLCD_ID_POS) | (HLCD_cfg[id].displayShift << HLCD_SH_POS);
-                error = HLCD_enuQueuePush(id,cmd,GPIO_PIN_STATE_LOW);
+                error = HLCD_enuQueuePush(id, cmd, GPIO_PIN_STATE_LOW);
             }
         }
     }
@@ -156,13 +163,33 @@ void HLCD_vRunnable(void)
         {
             if (HLCD_enuInitPins(id) == HLCD_OK)
             {
-                HLCD_initState[id] = HLCD_INIT_NIBBLE;
+                if (HLCD_cfg[id].mode == HLCD_MODE_4BIT)
+                {
+                    HLCD_initState[id] = HLCD_INIT_NIBBLE;
+                }
+                else
+                {
+                    HLCD_initState[id] = HLCD_INIT_DONE;
+                }
             }
             break;
         }
         case HLCD_INIT_NIBBLE:
         {
-
+            uint8_t cmd = HLCD_CMD_FUNCTION_SET;
+            if (HLCD_enuSendByte(id, cmd, GPIO_PIN_STATE_LOW) == HLCD_OK)
+            {
+                HLCD_initState[id] = HLCD_INIT_NIBBLE_LATCH;
+            }
+            break;
+        }
+        case HLCD_INIT_NIBBLE_LATCH:
+        {
+            if (HLCD_enuLatch(id) == HLCD_OK)
+            {
+                HLCD_initState[id] = HLCD_INIT_DONE;
+            }
+            break;
         }
         case HLCD_INIT_DONE:
         {
@@ -174,16 +201,39 @@ void HLCD_vRunnable(void)
                 GPIO_pinState_t rs;
                 if (HLCD_enuQueuePop(id, &byte, &rs) == HLCD_OK)
                 {
+                    HLCD_txLowNibble[id] = (uint8_t)(byte << 4U);
+                    HLCD_txRs[id] = rs;
                     if (HLCD_enuSendByte(id, byte, rs) == HLCD_OK)
                     {
                         HLCD_dataState[id] = HLCD_DATA_STATE_LATCH;
                     }
                 }
-
                 break;
             }
-
             case HLCD_DATA_STATE_LATCH:
+            {
+                if (HLCD_enuLatch(id) == HLCD_OK)
+                {
+                    if (HLCD_cfg[id].mode == HLCD_MODE_4BIT)
+                    {
+                        HLCD_dataState[id] = HLCD_DATA_STATE_SEND_LOW;
+                    }
+                    else
+                    {
+                        HLCD_dataState[id] = HLCD_DATA_STATE_SEND;
+                    }
+                }
+                break;
+            }
+            case HLCD_DATA_STATE_SEND_LOW:
+            {
+                if (HLCD_enuSendByte(id, HLCD_txLowNibble[id], HLCD_txRs[id]) == HLCD_OK)
+                {
+                    HLCD_dataState[id] = HLCD_DATA_STATE_LATCH_LOW;
+                }
+                break;
+            }
+            case HLCD_DATA_STATE_LATCH_LOW:
             {
                 if (HLCD_enuLatch(id) == HLCD_OK)
                 {

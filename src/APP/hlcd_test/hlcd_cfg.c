@@ -49,7 +49,7 @@ const HLCD_cfg_t HLCD_cfg[HLCD_COUNT] =
                 .pin    = GPIO_PIN1
             }
         },
-        .mode           = HLCD_MODE_8BIT,
+        .mode           = HLCD_MODE_4BIT,
         .lines          = HLCD_LINES_2,
         .font           = HLCD_FONT_5X7,
         .cursor         = HLCD_OFF,

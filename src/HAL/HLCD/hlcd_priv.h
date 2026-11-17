@@ -45,4 +45,7 @@
 /* Timing: max command time 1.53 ms, so a 2 ms runnable covers every command */
 #define HLCD_POWER_ON_DELAY_MS      30U
 
+#define HLCD_QUEUE_SIZE             32U
+#define HLCD_QUEUE_MASK             (HLCD_QUEUE_SIZE-1U)
+
 #endif /*HLCD_PRIV_H*/

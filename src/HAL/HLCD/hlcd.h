@@ -8,6 +8,10 @@ typedef enum
     HLCD_OK = 0,
     HLCD_GPIO_ERROR,      /* a GPIO call failed */
     HLCD_BUSY,
+    HLCD_EMPTY,
+    HLCD_INVALID_LCD,
+    HLCD_NULLPTR,
+    HLCD_INVALID_POS,
     HLCD_ERROR_COUNT
 } HLCD_errCode_t;
 
@@ -53,4 +57,5 @@ typedef struct
 
 void HLCD_vRunnable(void);
 HLCD_errCode_t HLCD_enuInit(void);
+HLCD_errCode_t HLCD_enuWriteChar(HLCD_id_t id, uint8_t byte);
 #endif /*HLCD_H*/

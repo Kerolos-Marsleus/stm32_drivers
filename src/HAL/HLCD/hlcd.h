@@ -58,4 +58,6 @@ typedef struct
 void HLCD_vRunnable(void);
 HLCD_errCode_t HLCD_enuInit(void);
 HLCD_errCode_t HLCD_enuWriteChar(HLCD_id_t id, uint8_t byte);
+HLCD_errCode_t HLCD_enuWriteString(HLCD_id_t id, const char* str);
+HLCD_errCode_t HLCD_enuSetCursor(HLCD_id_t id, uint8_t row, uint8_t col);
 #endif /*HLCD_H*/

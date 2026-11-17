@@ -300,6 +300,20 @@ HLCD_errCode_t HLCD_enuWriteChar(HLCD_id_t id, uint8_t byte)
     return HLCD_enuQueuePush(id, byte, GPIO_PIN_STATE_HIGH);
 }
 
+HLCD_errCode_t HLCD_enuWriteString(HLCD_id_t id, const char* str){
+    uint32_t i = 0U;
+    HLCD_errCode_t error = HLCD_OK;
+    if(str == NULL){
+        error = HLCD_NULLPTR;
+    }else{
+        while((str[i] != '\0') && (error == HLCD_OK)){
+            error = HLCD_enuWriteChar(id,(uint8_t)str[i]);
+            i++;
+        }
+    }
+    return error;
+}
+
 HLCD_errCode_t HLCD_enuSetCursor(HLCD_id_t id, uint8_t row, uint8_t col)
 {
     HLCD_errCode_t error = HLCD_OK;

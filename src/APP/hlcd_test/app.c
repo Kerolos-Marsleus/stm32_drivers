@@ -4,16 +4,41 @@
 #include "board.h"
 #include "hlcd.h"
 
-void APP_vInit(void){
-    if(RCC_enuPeriphClkCtrl(BOARD_LED_RCC,RCC_ENABLE) != RCC_OK){APP_vErrorHandler();}
-    if(RCC_enuPeriphClkCtrl(RCC_GPIOA,RCC_ENABLE) != RCC_OK){APP_vErrorHandler();}
-    if(RCC_enuPeriphClkCtrl(RCC_GPIOB,RCC_ENABLE) != RCC_OK){APP_vErrorHandler();}
-    if(HLED_enuInit() != HLED_OK){APP_vErrorHandler();}
-    if(HLCD_enuInit() != HLCD_OK){APP_vErrorHandler();}
+void APP_vInit(void)
+{
+    if (RCC_enuPeriphClkCtrl(BOARD_LED_RCC, RCC_ENABLE) != RCC_OK)
+    {
+        APP_vErrorHandler();
+    }
+    if (RCC_enuPeriphClkCtrl(RCC_GPIOA, RCC_ENABLE) != RCC_OK)
+    {
+        APP_vErrorHandler();
+    }
+    if (RCC_enuPeriphClkCtrl(RCC_GPIOB, RCC_ENABLE) != RCC_OK)
+    {
+        APP_vErrorHandler();
+    }
+    if (HLED_enuInit() != HLED_OK)
+    {
+        APP_vErrorHandler();
+    }
+    if (HLCD_enuInit() != HLCD_OK)
+    {
+        APP_vErrorHandler();
+    }
+    if (HLCD_enuSetCursor(HLCD_MAIN, 0U, 0U) != HLCD_OK)
+    {
+        APP_vErrorHandler();
+    }
+    if (HLCD_enuWriteString(HLCD_MAIN, "Hello, ITI") != HLCD_OK)
+    {
+        APP_vErrorHandler();
+    }
 }
 
-
-
-void APP_vErrorHandler(void){
-    while(1){}
+void APP_vErrorHandler(void)
+{
+    while (1)
+    {
+    }
 }

@@ -12,6 +12,7 @@ typedef enum
     HLCD_INVALID_LCD,
     HLCD_NULLPTR,
     HLCD_INVALID_POS,
+    HLCD_INVALID_INDEX,
     HLCD_ERROR_COUNT
 } HLCD_errCode_t;
 
@@ -60,4 +61,5 @@ HLCD_errCode_t HLCD_enuInit(void);
 HLCD_errCode_t HLCD_enuWriteChar(HLCD_id_t id, uint8_t byte);
 HLCD_errCode_t HLCD_enuWriteString(HLCD_id_t id, const char* str);
 HLCD_errCode_t HLCD_enuSetCursor(HLCD_id_t id, uint8_t row, uint8_t col);
+HLCD_errCode_t HLCD_enuStoreCustomChar(HLCD_id_t id, uint8_t index, const uint8_t *pattern);
 #endif /*HLCD_H*/

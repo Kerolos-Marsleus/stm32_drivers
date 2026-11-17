@@ -41,7 +41,7 @@
 /* CGRAM */
 #define HLCD_CGRAM_CHARS            8U
 #define HLCD_CGRAM_BYTES_PER_CHAR   8U
-
+#define HLCD_CGRAM_INDEX_POS        3U
 /* Timing: max command time 1.53 ms, so a 2 ms runnable covers every command */
 #define HLCD_POWER_ON_DELAY_MS      30U
 

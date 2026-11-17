@@ -166,7 +166,7 @@ void HLCD_vRunnable(void)
         }
         case HLCD_INIT_DISPLAY_ON_OFF_WAIT:
         {
-            if (HLCD_enuLatch(id)== HLCD_OK)
+            if (HLCD_enuLatch(id) == HLCD_OK)
             {
                 HLCD_initState[id] = HLCD_INIT_DISPLAY_CLEAR;
             }
@@ -183,7 +183,7 @@ void HLCD_vRunnable(void)
         }
         case HLCD_INIT_DISPLAY_CLEAR_WAIT:
         {
-            if (HLCD_enuLatch(id)== HLCD_OK)
+            if (HLCD_enuLatch(id) == HLCD_OK)
             {
                 HLCD_initState[id] = HLCD_INIT_ENTRY_MODE_SET;
             }
@@ -200,7 +200,7 @@ void HLCD_vRunnable(void)
         }
         case HLCD_INIT_ENTRY_MODE_SET_WAIT:
         {
-            if (HLCD_enuLatch(id)== HLCD_OK)
+            if (HLCD_enuLatch(id) == HLCD_OK)
             {
                 HLCD_initState[id] = HLCD_INIT_DONE;
             }
@@ -227,7 +227,7 @@ void HLCD_vRunnable(void)
 
             case HLCD_DATA_STATE_LATCH:
             {
-                if (HLCD_enuLatch(id)== HLCD_OK)
+                if (HLCD_enuLatch(id) == HLCD_OK)
                 {
                     HLCD_dataState[id] = HLCD_DATA_STATE_SEND;
                 }
@@ -300,14 +300,19 @@ HLCD_errCode_t HLCD_enuWriteChar(HLCD_id_t id, uint8_t byte)
     return HLCD_enuQueuePush(id, byte, GPIO_PIN_STATE_HIGH);
 }
 
-HLCD_errCode_t HLCD_enuWriteString(HLCD_id_t id, const char* str){
+HLCD_errCode_t HLCD_enuWriteString(HLCD_id_t id, const char *str)
+{
     uint32_t i = 0U;
     HLCD_errCode_t error = HLCD_OK;
-    if(str == NULL){
+    if (str == NULL)
+    {
         error = HLCD_NULLPTR;
-    }else{
-        while((str[i] != '\0') && (error == HLCD_OK)){
-            error = HLCD_enuWriteChar(id,(uint8_t)str[i]);
+    }
+    else
+    {
+        while ((str[i] != '\0') && (error == HLCD_OK))
+        {
+            error = HLCD_enuWriteChar(id, (uint8_t)str[i]);
             i++;
         }
     }
@@ -333,6 +338,30 @@ HLCD_errCode_t HLCD_enuSetCursor(HLCD_id_t id, uint8_t row, uint8_t col)
     {
         uint8_t addr = HLCD_lineBase[row] + col;
         error = HLCD_enuQueuePush(id, (HLCD_CMD_SET_DDRAM_ADDR | addr), GPIO_PIN_STATE_LOW);
+    }
+    return error;
+}
+
+HLCD_errCode_t HLCD_enuStoreCustomChar(HLCD_id_t id, uint8_t index, const uint8_t *pattern)
+{
+    HLCD_errCode_t error = HLCD_OK;
+    if ((uint32_t)id >= HLCD_COUNT)
+    {
+        error = HLCD_INVALID_LCD;
+    }
+    else if (index >= HLCD_CGRAM_CHARS)
+    {
+        error = HLCD_INVALID_INDEX;
+    }
+    else if(pattern == NULL){
+        error = HLCD_NULLPTR;
+    }else if((HLCD_QUEUE_SIZE - HLCD_queue[id].count) < (1U + HLCD_CGRAM_BYTES_PER_CHAR)){
+        error = HLCD_BUSY;
+    }else{
+        error = HLCD_enuQueuePush(id, (HLCD_CMD_SET_CGRAM_ADDR | (index << HLCD_CGRAM_INDEX_POS)), GPIO_PIN_STATE_LOW);
+        for(uint32_t i = 0U; (i < HLCD_CGRAM_BYTES_PER_CHAR) && (error == HLCD_OK); i++){
+            error = HLCD_enuQueuePush(id, pattern[i], GPIO_PIN_STATE_HIGH);
+        }
     }
     return error;
 }

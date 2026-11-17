@@ -26,8 +26,8 @@ flowchart TB
     subgraph HAL["HAL · src/HAL/"]
         direction LR
         HLED["HLED"]
-        HSW["HSWITCH<br/>(next)"]
-        HLCD["HLCD<br/>(next)"]
+        HSW["HSWITCH<br/>debounced buttons"]
+        HLCD["HLCD<br/>async character LCD"]
     end
 
     subgraph MCAL["MCAL · src/MCAL/"]
@@ -169,7 +169,85 @@ flowchart TB
 
 ---
 
-## 5. Repository layout
+## 5. HLCD: asynchronous character LCD
+
+Driver for KS0066 / HD44780-compatible LCDs. Supports **several LCDs at once**, **8-bit or 4-bit** bus per LCD, text, cursor moves and **custom characters** (CGRAM). No public function ever waits: the app puts bytes in a queue and returns; one runnable drains it.
+
+### Data path
+
+```mermaid
+flowchart LR
+    APP["APP<br/>WriteString · SetCursor<br/>StoreCustomChar"]
+    Q[("ring buffer · per LCD<br/>32 × byte + 32-bit RS bitmap")]
+    RUN["HLCD_vRunnable<br/>every 2 ms"]
+    PINS["GPIO<br/>RS · E · D7–D4 (· D3–D0)"]
+    LCD(["LCD controller"])
+
+    APP -- "put (byte, RS)" --> Q
+    Q -- "get, one byte per 2–4 ticks" --> RUN
+    RUN --> PINS --> LCD
+
+    classDef app fill:#F1ECFA,stroke:#6A3FB5,color:#16212C
+    classDef hal fill:#FBF1E2,stroke:#B06A00,color:#16212C
+    classDef mcal fill:#E8F0FB,stroke:#1D5FB8,color:#16212C
+    classDef hw fill:#E4E8EC,stroke:#3A4652,color:#16212C
+    class APP app
+    class Q,RUN hal
+    class PINS mcal
+    class LCD hw
+```
+
+Commands (cursor moves, CGRAM writes, the init sequence) travel through the **same queue** as characters, so everything reaches the LCD in the order it was requested. Bit *i* of the RS bitmap holds the RS level of slot *i* (0 = command, 1 = data).
+
+### Two state machines per LCD
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    state "INIT" as init {
+        [*] --> NO_REQ
+        NO_REQ --> PINS: HLCD_enuInit() (queues 4 init commands)
+        PINS --> NIBBLE: 4-bit
+        PINS --> DONE: 8-bit
+        NIBBLE --> NIBBLE_LATCH: D7–D4 = 0010, E↑
+        NIBBLE_LATCH --> DONE: E↓ (LCD now 4-bit)
+    }
+    state "DATA (runs inside DONE)" as data {
+        SEND --> LATCH: get byte, E↑
+        LATCH --> SEND: 8-bit, E↓
+        LATCH --> SEND_LOW: 4-bit, E↓
+        SEND_LOW --> LATCH_LOW: low nibble, E↑
+        LATCH_LOW --> SEND: E↓
+    }
+```
+
+The lone `0010` nibble switches a 4-bit LCD out of its power-on 8-bit mode; it cannot go through the queue because it has no second half. Everything after it (Function Set, Display ON, Clear, Entry Mode, then app text) is drained from the queue.
+
+### Timing
+
+One E pulse = 2 runnable ticks (E high for a full tick, then low).
+
+| | per byte | 13-byte line (`UP: hh:mm:ss` + cursor) |
+|---|---|---|
+| 8-bit | 2 ticks × 2 ms = **4 ms** | 52 ms |
+| 4-bit | 4 ticks × 2 ms = **8 ms** | 104 ms |
+
+The longest datasheet wait (Clear, 1.53 ms) is shorter than one tick, so no state ever busy-waits. The 30 ms power-on wait is the scheduler's first delay (50 ms).
+
+### Config per LCD (`hlcd_cfg.c`)
+
+| Field | Values |
+|---|---|
+| `pins[]` | D0–D7, RS, E (D0–D3 unused in 4-bit) |
+| `mode` | `HLCD_MODE_8BIT`, `HLCD_MODE_4BIT` |
+| `lines`, `font` | 1 / 2 lines, 5×7 / 5×10 |
+| `cursor`, `blink`, `entryDirection`, `displayShift` | on / off, increment / decrement |
+
+Switching an app from 8-bit to 4-bit is a one-word change here; app code is untouched.
+
+---
+
+## 6. Repository layout
 
 ```
 src/
@@ -182,13 +260,19 @@ test/            Unity tests on the PC (UNIT_TEST fake registers)
 docs/            this file
 ```
 
-## 6. Status
+## 7. Status
 
 | Module | Layer | State |
 |---|---|---|
 | RCC, GPIO, STK (polling + interrupt), NVIC | MCAL | done |
 | HLED | HAL | done |
 | SCHED | SERVICES | done |
-| HSWITCH | HAL | in progress |
-| HLCD (8-bit, then 4-bit, async) | HAL | planned |
+| HSWITCH (shift-register debounce, 4-state machine) | HAL | done |
+| HLCD (async queue, multi-LCD, 8/4-bit, CGRAM) | HAL | done |
+| HKEYPAD | HAL | next |
 | UART | MCAL | planned |
+
+| App (`src/APP/`) | Shows |
+|---|---|
+| `hswitch_test` | debounced button → LED |
+| `hlcd_test` | katakana line, `UP: hh:mm:ss` uptime, CGRAM-animated stick figure |

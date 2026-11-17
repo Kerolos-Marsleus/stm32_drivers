@@ -5,7 +5,7 @@
 #include "hlcd.h"
 
 #define APP_UPTIME_ROW 1U
-#define APP_UPTIME_COL 4U
+#define APP_UPTIME_COL 0U
 #define APP_SEC_PER_MIN 60U
 #define APP_MIN_PER_HOUR 60U
 #define APP_HOURS_WRAP 100U
@@ -50,10 +50,6 @@ void APP_vInit(void)
     {
         APP_vErrorHandler();
     }
-    if (HLCD_enuWriteString(HLCD_MAIN, "UP: ") != HLCD_OK)
-    {
-        APP_vErrorHandler();
-    }
     if (HLCD_enuStoreCustomChar(HLCD_MAIN, 1U, APP_mystery) != HLCD_OK)
     {
         APP_vErrorHandler();
@@ -86,11 +82,11 @@ void APP_vUptime(void)
     static uint8_t sec = 0U;
     static uint8_t min = 0U;
     static uint8_t hour = 0U;
-    static char upTime[] = "00:00:00"; // and \0 at the end
-
-    APP_vTwoDigit(&upTime[0], hour);
-    APP_vTwoDigit(&upTime[3], min);
-    APP_vTwoDigit(&upTime[6], sec);
+    static char upTime[] = "UP: 00:00:00"; // and \0 at the end
+                          //012345678910
+    APP_vTwoDigit(&upTime[4], hour);
+    APP_vTwoDigit(&upTime[7], min);
+    APP_vTwoDigit(&upTime[10], sec);
     if (HLCD_enuSetCursor(HLCD_MAIN, APP_UPTIME_ROW, APP_UPTIME_COL) != HLCD_OK)
     {
         APP_vErrorHandler();

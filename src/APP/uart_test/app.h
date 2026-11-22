@@ -4,6 +4,6 @@
 
 void APP_vInit(void);
 void APP_vErrorHandler(void);
-void APP_vUartTest(void);
+// void APP_vUartTest(void);
 
 #endif /*APP_H*/

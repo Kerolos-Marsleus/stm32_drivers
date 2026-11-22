@@ -5,8 +5,10 @@
 
 #define APP_POSE_COUNT 2U
 
-static const uint8_t APP_msg[] = "HELLO ITI\r\n";
-#define APP_MSG_LEN   (sizeof(APP_msg) - 1U)
+static uint8_t APP_rxByte;
+static void APP_vRxDone(void);
+// static const uint8_t APP_msg[] = "HELLO ITI\r\n";
+// #define APP_MSG_LEN   (sizeof(APP_msg) - 1U)
 
 static const uint8_t APP_stickman[8] = {0x0E, 0x0E, 0x04, 0x1F, 0x04, 0x0A, 0x11, 0x00};
 static const uint8_t APP_stickmanUp[8] = {0x0E, 0x0E, 0x15, 0x0E, 0x04, 0x0A, 0x0A, 0x00};
@@ -27,6 +29,9 @@ void APP_vInit(void)
     {
         APP_vErrorHandler();
     }
+    /* */ 
+    (void)UART_enuRecvBufAsync(UART_DEBUG, &APP_rxByte, 1U, APP_vRxDone);   /* start listening */
+    /*  */
 }
 
 void APP_vErrorHandler(void)
@@ -42,6 +47,12 @@ static void APP_vTwoDigit(char *dest, uint8_t val)
     dest[1] = (char)('0' + val % 10);
 }
 
-void APP_vUartTest(void){
-    UART_enuSendBufAsync(UART_DEBUG, APP_msg,APP_MSG_LEN,NULL);
+// void APP_vUartTest(void){
+//     UART_enuSendBufAsync(UART_DEBUG, APP_msg,APP_MSG_LEN,NULL);
+// }
+
+static void APP_vRxDone(void)          /* runs inside the ISR */
+{
+    (void)UART_enuSendBufAsync(UART_DEBUG, &APP_rxByte, 1U, NULL);          
+    (void)UART_enuRecvBufAsync(UART_DEBUG, &APP_rxByte, 1U, APP_vRxDone);  
 }

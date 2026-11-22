@@ -44,6 +44,16 @@ typedef struct
 } UART_txState_t;
 static UART_txState_t UART_tx[UART_CH_COUNT];
 
+typedef struct
+{
+    uint8_t *buf;
+    uint16_t len;
+    volatile uint16_t idx;
+    UART_cbf_t cbf;
+    volatile uint8_t busy;
+} UART_rxState_t;
+static UART_rxState_t UART_rx[UART_CH_COUNT];
+
 UART_errCode_t UART_enuInit(void)
 {
     UART_errCode_t error = UART_OK;
@@ -128,7 +138,8 @@ UART_errCode_t UART_enuInit(void)
             ctr1 |= ((uint32_t)UART_cfg[id].oversampling << UART_CR1_OVER8_POS) | ((uint32_t)UART_cfg[id].wordLength << UART_CR1_M_POS) | ((uint32_t)UART_cfg[id].parity << UART_CR1_PS_POS) | ((uint32_t)UART_cfg[id].direction << UART_CR1_RE_POS);
             UART_base[ch]->CR1 = ctr1;
             UART_base[ch]->CR1 |= (1U << UART_CR1_UE_POS);
-            if(NVIC_enuEnableIRQ(UART_irq[ch]) != NVIC_OK){
+            if (NVIC_enuEnableIRQ(UART_irq[ch]) != NVIC_OK)
+            {
                 error = UART_NVIC_ERROR;
             }
         }
@@ -169,16 +180,55 @@ UART_errCode_t UART_enuSendBufAsync(UART_id_t id, const uint8_t *buf, uint16_t l
             UART_tx[ch].len = len;
             UART_tx[ch].idx = 0U;
             UART_tx[ch].busy = 1U;
-            UART_base[ch]->CR1 |= (1U << UART_CR1_TXEIE_POS);
+            UART_base[ch]->CR1 |= (UART_CR1_TXEIE_MASK);
+        }
+    }
+    return error;
+}
+UART_errCode_t UART_enuRecvBufAsync(UART_id_t id, uint8_t *buf, uint16_t len, UART_cbf_t cbf)
+{
+    UART_errCode_t error = UART_OK;
+    if ((uint32_t)id >= UART_COUNT)
+    {
+        error = UART_INVALID_ID;
+    }
+    else if (buf == NULL)
+    {
+        error = UART_NULLPTR;
+    }
+    else if (len == 0U)
+    {
+        error = UART_INVALID_LEN;
+    }
+    else if ((UART_cfg[id].direction & UART_DIR_RX_MASK) == 0U)
+    {
+        error = UART_INVALID_CFG;
+    }
+    else
+    {
+        UART_CH_t ch = UART_cfg[id].channel;
+        if (UART_rx[ch].busy != 0U)
+        {
+            error = UART_BUSY;
+        }
+        else
+        {
+            UART_rx[ch].buf = buf;
+            UART_rx[ch].cbf = cbf;
+            UART_rx[ch].len = len;
+            UART_rx[ch].idx = 0U;
+            UART_rx[ch].busy = 1U;
+            UART_base[ch]->CR1 |= (UART_CR1_RXNEIE_MASK);
         }
     }
     return error;
 }
 
 static void UART_vIrqHandler(UART_CH_t ch)
-{
-    if ((UART_base[ch]->CR1 & UART_CR1_TXEIE_MASK) != 0U &&
-        (UART_base[ch]->SR & UART_SR_TXE_MASK) != 0U)
+{   
+    // transmission
+    if (((UART_base[ch]->CR1 & UART_CR1_TXEIE_MASK) != 0U) &&
+        ((UART_base[ch]->SR & UART_SR_TXE_MASK) != 0U))
     {
         if (UART_tx[ch].idx < UART_tx[ch].len)
         {
@@ -189,14 +239,32 @@ static void UART_vIrqHandler(UART_CH_t ch)
             UART_base[ch]->CR1 = (UART_base[ch]->CR1 & ~UART_CR1_TXEIE_MASK) | UART_CR1_TCIE_MASK;
         }
     }
-    if ((UART_base[ch]->CR1 & UART_CR1_TCIE_MASK) != 0U &&
-        (UART_base[ch]->SR & UART_SR_TC_MASK) != 0U)
+    if (((UART_base[ch]->CR1 & UART_CR1_TCIE_MASK) != 0U) &&
+        ((UART_base[ch]->SR & UART_SR_TC_MASK) != 0U))
     {
         UART_base[ch]->CR1 &= ~UART_CR1_TCIE_MASK;
         UART_tx[ch].busy = 0U;
         if (UART_tx[ch].cbf != NULL)
         {
             UART_tx[ch].cbf();
+        }
+    }
+    // Receiving
+    if (((UART_base[ch]->CR1 & UART_CR1_RXNEIE_MASK) != 0U) &&
+        ((UART_base[ch]->SR & UART_SR_RXNE_MASK) != 0U))
+    {
+        if (UART_rx[ch].idx < UART_rx[ch].len)
+        {
+            UART_rx[ch].buf[UART_rx[ch].idx++] = (uint8_t)UART_base[ch]->DR;
+        }
+        if (UART_rx[ch].idx == UART_rx[ch].len)
+        {
+            UART_base[ch]->CR1 = (UART_base[ch]->CR1 & ~UART_CR1_RXNEIE_MASK);
+            UART_rx[ch].busy = 0U;
+            if (UART_rx[ch].cbf != NULL)
+            {
+                UART_rx[ch].cbf();
+            }
         }
     }
 }

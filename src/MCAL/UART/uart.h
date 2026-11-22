@@ -81,4 +81,5 @@ typedef struct
 typedef void (*UART_cbf_t)(void);
 UART_errCode_t UART_enuInit(void);
 UART_errCode_t UART_enuSendBufAsync(UART_id_t id, const uint8_t *buf, uint16_t len, UART_cbf_t cbf);
+UART_errCode_t UART_enuRecvBufAsync(UART_id_t id, uint8_t *buf, uint16_t len, UART_cbf_t cbf);
 #endif /* UART_H */

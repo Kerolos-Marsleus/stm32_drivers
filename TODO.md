@@ -13,3 +13,4 @@
 - [ ] Interrupt mode: rewrite STK_enuDelayMs to use STK_u32TimeMs (no LOAD changes); wrap StartFromMax/GetTicks in #if POLLING
 - [ ] Learn the build: platformio.ini, envs, -I, build_src_filter, compile vs link
 - [ ] HLCD: robust re-init after MCU-only reset (0x3 ×3, HD44780 fig. 23/24, >4.1 ms after the first)
+- RCC: add RCC_enuBusClkFreqGet(bus) (decode HPRE + PPRE1/2 in RCC_CFGR, §6.3.3); UART must use the bus clock, not a #define

@@ -224,8 +224,46 @@ UART_errCode_t UART_enuRecvBufAsync(UART_id_t id, uint8_t *buf, uint16_t len, UA
     return error;
 }
 
+UART_errCode_t UART_enuSetDma(UART_id_t id, UART_dma_t dma)
+{
+    UART_errCode_t error = UART_OK;
+    if ((uint32_t)id >= UART_COUNT)
+    {
+        error = UART_INVALID_ID;
+    }
+    else if (((uint32_t)dma & ~(uint32_t)UART_cfg[id].direction) != 0U)
+    {
+        error = UART_INVALID_CFG;
+    }
+    else
+    {
+        UART_CH_t ch = UART_cfg[id].channel;
+        uint32_t cr3 = UART_base[ch]->CR3;
+        cr3 &= ~(UART_CR3_DMA_MASK);
+        cr3 |= ((uint32_t) dma << UART_CR3_DMAR_POS);
+        UART_base[ch]->CR3 = cr3;
+    }
+    return error;
+}
+
+UART_errCode_t UART_enuGetDataRegAddr(UART_id_t id, uint32_t *ptr_addr){
+    UART_errCode_t error = UART_OK;
+    if ((uint32_t)id >= UART_COUNT)
+    {
+        error = UART_INVALID_ID;
+    }else if (ptr_addr == NULL)
+    {
+        error = UART_NULLPTR;
+    }else{
+        UART_CH_t ch = UART_cfg[id].channel;
+        *ptr_addr = (uint32_t)&UART_base[ch]->DR;
+    }
+    return error;
+}
+
+
 static void UART_vIrqHandler(UART_CH_t ch)
-{   
+{
     // transmission
     if (((UART_base[ch]->CR1 & UART_CR1_TXEIE_MASK) != 0U) &&
         ((UART_base[ch]->SR & UART_SR_TXE_MASK) != 0U))

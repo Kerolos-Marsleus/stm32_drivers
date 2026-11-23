@@ -53,7 +53,7 @@ void APP_vInit(void)
     DMA_enuSetCallback(DMA_1,DMA_STREAM_5,APP_vRecieveCallBack);
     DMA_enuSetCallback(DMA_1,DMA_STREAM_6,APP_vTransmitCallBack);
     UART_enuGetDataRegAddr(UART_DEBUG,&dataRegister);
-    DMA_enuStart(DMA_1,DMA_STREAM_5,dataRegister,(uint32_t)APP_rxBuf,4);
+    DMA_enuStart(DMA_1,DMA_STREAM_5,dataRegister,(uint32_t)APP_rxBuf,1);
     UART_enuSetDma(UART_DEBUG,UART_DMA_TX_RX);
 
 
@@ -68,10 +68,10 @@ void APP_vErrorHandler(void)
 }
 
 void APP_vRecieveCallBack(void){
-    DMA_enuStart(DMA_1,DMA_STREAM_6,(uint32_t) APP_rxBuf,dataRegister,4);
+    DMA_enuStart(DMA_1,DMA_STREAM_6,(uint32_t) APP_rxBuf,dataRegister,1);
 }
 
 void APP_vTransmitCallBack(void){
-    DMA_enuStart(DMA_1,DMA_STREAM_5,dataRegister,(uint32_t)APP_rxBuf,4);
+    DMA_enuStart(DMA_1,DMA_STREAM_5,dataRegister,(uint32_t)APP_rxBuf,1);
 
 }

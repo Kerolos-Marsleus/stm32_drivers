@@ -55,6 +55,14 @@ typedef enum
 
 typedef enum
 {
+    UART_DMA_NONE  = 0,  // when the dma is disables and interrupt enabled 
+    UART_DMA_RX    = 1,   
+    UART_DMA_TX    = 2,   
+    UART_DMA_TX_RX = 3    
+} UART_dma_t;
+
+typedef enum
+{
     UART_OVERSAMPLING_16 = 0,   
     UART_OVERSAMPLING_8  = 1    
 } UART_oversampling_t;
@@ -82,4 +90,6 @@ typedef void (*UART_cbf_t)(void);
 UART_errCode_t UART_enuInit(void);
 UART_errCode_t UART_enuSendBufAsync(UART_id_t id, const uint8_t *buf, uint16_t len, UART_cbf_t cbf);
 UART_errCode_t UART_enuRecvBufAsync(UART_id_t id, uint8_t *buf, uint16_t len, UART_cbf_t cbf);
+UART_errCode_t UART_enuSetDma(UART_id_t id, UART_dma_t dma);
+UART_errCode_t UART_enuGetDataRegAddr(UART_id_t id, uint32_t *ptr_addr);
 #endif /* UART_H */

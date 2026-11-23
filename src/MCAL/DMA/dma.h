@@ -84,7 +84,8 @@ typedef enum
     DMA_NULLPTR,
     DMA_INVALID_ID,  
     DMA_INVALID_CFG, 
-    DMA_BUSY,   
+    DMA_BUSY,  
+    DMA_NVIC_ERROR, 
     DMA_ZERO_COUNT,    
     DMA_ERROR_COUNT
 } DMA_errCode_t;

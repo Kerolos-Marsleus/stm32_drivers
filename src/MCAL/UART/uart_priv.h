@@ -50,4 +50,7 @@ typedef struct
 // /* BRR fields */
 #define UART_BRR_MANTISSA_POS   4U   
 #define UART_BRR_MANTISSA_MAX   4095U
+
+#define UART_CR3_DMAR_POS    6U                         
+#define UART_CR3_DMA_MASK    (3U << UART_CR3_DMAR_POS)   
 #endif /* UART_PRIV_H */

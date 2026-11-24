@@ -9,6 +9,8 @@ static DMA_reg_t *const DMA_base[DMA_COUNT] =
     [DMA_2] = (DMA_reg_t *)DMA_DMA2_BASE,
 };
 
+static uint32_t DMA_ctx[DMA_COUNT][DMA_STREAM_COUNT];
+
 static const NVIC_irq_t DMA_irq[DMA_COUNT][DMA_STREAM_COUNT] =
 {
     [DMA_1] =
@@ -139,7 +141,7 @@ DMA_errCode_t DMA_enuGetRemaining(DMA_id_t dma, DMA_stream_t stream, uint16_t *p
     return error;
 }
 
-DMA_errCode_t DMA_enuSetCallback(DMA_id_t dma, DMA_stream_t stream, DMA_cbf_t cbf){
+DMA_errCode_t DMA_enuSetCallback(DMA_id_t dma, DMA_stream_t stream, DMA_cbf_t cbf, uint32_t context){
     DMA_errCode_t error = DMA_OK;
     if ((uint32_t)dma >= DMA_COUNT)
     {
@@ -150,6 +152,7 @@ DMA_errCode_t DMA_enuSetCallback(DMA_id_t dma, DMA_stream_t stream, DMA_cbf_t cb
         error = DMA_INVALID_ID;
     }else {
         DMA_cbf[dma][stream] = cbf;
+        DMA_ctx[dma][stream] = context;
         if(cbf != NULL){
             if(NVIC_enuEnableIRQ(DMA_irq[dma][stream]) != NVIC_OK){
                 error = DMA_NVIC_ERROR;
@@ -181,7 +184,7 @@ static void DMA_vIrqHandler(DMA_id_t dma, DMA_stream_t stream){
     if((status & (1U << ((uint32_t)pos + DMA_FLAG_TCIF_OFFSET))) != 0U){
         *ifcr = (1U << ((uint32_t)pos + DMA_FLAG_TCIF_OFFSET));
         if(DMA_cbf[dma][stream] != NULL){
-            DMA_cbf[dma][stream]();
+            DMA_cbf[dma][stream](DMA_ctx[dma][stream]);
         }
     }
     if((status & (1U << ((uint32_t)pos + DMA_FLAG_TEIF_OFFSET))) != 0U){

@@ -76,7 +76,7 @@ typedef struct
     DMA_state_t circular;
 } DMA_cfg_t;
 
-typedef void (*DMA_cbf_t)(void);
+typedef void (*DMA_cbf_t)(uint32_t context);
 
 typedef enum
 {
@@ -91,7 +91,7 @@ typedef enum
 } DMA_errCode_t;
 
 DMA_errCode_t DMA_enuConfigure(DMA_id_t dma, DMA_stream_t stream, const DMA_cfg_t *cfg);
-DMA_errCode_t DMA_enuSetCallback(DMA_id_t dma, DMA_stream_t stream, DMA_cbf_t cbf);
+DMA_errCode_t DMA_enuSetCallback(DMA_id_t dma, DMA_stream_t stream, DMA_cbf_t cbf,uint32_t context);
 DMA_errCode_t DMA_enuStart(DMA_id_t dma, DMA_stream_t stream, uint32_t src, uint32_t dst, uint16_t count);
 DMA_errCode_t DMA_enuStop(DMA_id_t dma, DMA_stream_t stream);
 DMA_errCode_t DMA_enuGetRemaining(DMA_id_t dma, DMA_stream_t stream, uint16_t *ptr_count);

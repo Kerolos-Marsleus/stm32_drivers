@@ -8,8 +8,8 @@ const HSERIAL_cfg_t HSERIAL_cfg[HSERIAL_COUNT] =
         [HSERIAL_DEBUG] =
             {
                 .uart = UART_DEBUG,
-                .txMode = HSERIAL_MODE_INTERRUPT,
-                .rxMode = HSERIAL_MODE_INTERRUPT,
+                .txMode = HSERIAL_MODE_DMA,
+                .rxMode = HSERIAL_MODE_DMA,
                 .txDma = {
                     .controller = DMA_1,
                     .stream = DMA_STREAM_6,

@@ -69,7 +69,7 @@ static APP_errCode_t APP_enuBackspace(APP_buffer_t *buffer);
 static APP_errCode_t APP_enuAppend(APP_buffer_t *buffer, char data);
 static uint8_t       APP_u8IsAppendable(char key);
 static void          APP_vIntToString(int32_t num, char *res);
-static void          APP_vRedraw(void);
+static void          APP_vDrawRow(uint8_t row, const char *str);
 
 void APP_vInit(void)
 {
@@ -111,36 +111,30 @@ void APP_vRunnable(void)
     }
     if (APP_u8IsAppendable(key) == 1U)
     {
-        APP_errCode_t error = APP_enuAppend(&APP_buffer, key);
-        APP_buffer.isChanged = 1U;
+        if (APP_enuAppend(&APP_buffer, key) == APP_OK)
+        {
+            APP_buffer.isChanged = 1U;
+        }
     }
     else if (key == APP_KEY_EQUALS)
     {
         int32_t        result = 0;
         char           out[APP_INT_STR_LEN];
         CALC_errCode_t error = CALC_enuEvaluate(APP_buffer.text, &result);
-        if (HLCD_enuSetCursor(HLCD_MAIN, 1U, 0U) != HLCD_OK)
-        {
-            APP_vErrorHandler();
-        }
         if (error == CALC_OK)
         {
             APP_vIntToString(result, out);
-            if (HLCD_enuWriteString(HLCD_MAIN, out) != HLCD_OK)
-            {
-                APP_vErrorHandler();
-            }
+            APP_vDrawRow(1U, out);
         }
         else if (error < CALC_ERROR_COUNT)
         {
-            if (HLCD_enuWriteString(HLCD_MAIN, APP_errMsg[error]) != HLCD_OK)
-            {
-                APP_vErrorHandler();
-            }
+            APP_vDrawRow(1U, APP_errMsg[error]);
         }
     }
-    if(APP_buffer.isChanged == 1U){
-        APP_vRedraw();
+    if (APP_buffer.isChanged == 1U)
+    {
+        APP_vDrawRow(0U, APP_buffer.text);
+        APP_buffer.isChanged = 0U;
     }
 }
 
@@ -242,20 +236,26 @@ static void APP_vIntToString(int32_t num, char *res)
     }
 }
 
-static void APP_vRedraw(void)
+static void APP_vDrawRow(uint8_t row, const char *str)
 {
-    if (HLCD_enuSetCursor(HLCD_MAIN, 0U, 0U) != HLCD_OK)
+    if (HLCD_enuSetCursor(HLCD_MAIN, row, 0U) != HLCD_OK)
     {
         APP_vErrorHandler();
     }
-    if (HLCD_enuWriteString(HLCD_MAIN, APP_buffer.text) != HLCD_OK)
+    if (HLCD_enuWriteString(HLCD_MAIN, str) != HLCD_OK)
     {
         APP_vErrorHandler();
     }
-    for (uint32_t i = APP_buffer.index; i < APP_LCD_COLS; ++i)
+    uint8_t count = 0;
+    while (str[count] != '\0')
     {
-        HLCD_enuWriteChar(HLCD_MAIN, ' ');
+        ++count;
     }
-
-    APP_buffer.isChanged = 0U;
+    if (count < APP_LCD_COLS)
+    {
+        for (uint32_t i = 0U; i < APP_LCD_COLS - count; ++i)
+        {
+            HLCD_enuWriteChar(HLCD_MAIN, ' ');
+        }
+    }
 }

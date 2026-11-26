@@ -14,7 +14,7 @@ const SCHED_runnableCfg_t SCHED_cfg[SCHED_RUNNABLE_COUNT] =
         [SCHED_RUN_HKEYPAD] =
             {
                 .func = HKEYPAD_vRunnable,
-                .firstDelayMs = 100U,
+                .firstDelayMs = 120U,
                 .periodMs = 1U,
             },
         [SCHED_RUN_CALCULATOR_APP] =

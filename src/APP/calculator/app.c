@@ -32,6 +32,7 @@ typedef struct
     uint8_t  isChanged;
     uint8_t  isResult;
     uint8_t  isR1Clear;
+    uint8_t  isShift;
 
 } APP_buffer_t;
 
@@ -44,14 +45,7 @@ typedef enum
     APP_ERROR_COUNT
 } APP_errCode_t;
 
-static APP_buffer_t       APP_buffer                          = {0};
-static const APP_action_t APP_shiftLayer[APP_SHIFT_KEY_COUNT] = {
-    [('A' - 'A')] = APP_ACTION_LPAREN,
-    [('B' - 'A')] = APP_ACTION_RPAREN,
-    [('C' - 'A')] = APP_ACTION_CLEAR,
-    [('D' - 'A')] = APP_ACTION_BACKSPACE,
-};
-
+static APP_buffer_t      APP_buffer                   = {0};
 static const char *const APP_errMsg[CALC_ERROR_COUNT] = {
     [CALC_OK]               = "",
     [CALC_SYNTAX_ERROR]     = "Syntax Error",
@@ -61,11 +55,27 @@ static const char *const APP_errMsg[CALC_ERROR_COUNT] = {
     [CALC_STACK_FULL]       = "Too Complex",
 };
 
+typedef struct
+{
+    char         key;
+    APP_action_t action;
+} APP_keyAction_t;
+
+static const APP_keyAction_t APP_shiftLayer[] = {
+    {'+', APP_ACTION_LPAREN},
+    {'-', APP_ACTION_RPAREN},
+    {'*', APP_ACTION_BACKSPACE},
+    {'/', APP_ACTION_CLEAR},
+};
+
+#define APP_SHIFT_LAYER_COUNT (sizeof(APP_shiftLayer) / sizeof(APP_shiftLayer[0]))
+
 static APP_errCode_t APP_enuBackspace(APP_buffer_t *buffer);
 static APP_errCode_t APP_enuAppend(APP_buffer_t *buffer, char data);
 static uint8_t       APP_u8IsAppendable(char key);
 static void          APP_vIntToString(int32_t num, char *res);
 static void          APP_vDrawRow(uint8_t row, const char *str);
+static APP_action_t  APP_enuShiftLookup(char key);
 
 void APP_vInit(void)
 {
@@ -105,36 +115,80 @@ void APP_vRunnable(void)
     {
         APP_vErrorHandler();
     }
-    if ((key != '\0') && (APP_buffer.isResult == 1U) && (key != APP_KEY_EQUALS))
+    if (key != '\0')
     {
-        APP_buffer.index     = 0U;
-        APP_buffer.text[0]   = '\0';
-        APP_buffer.isR1Clear = 1U;
-        APP_buffer.isResult  = 0U;
-        APP_buffer.isChanged = 1U;
-    }
-    if (APP_u8IsAppendable(key) == 1U)
-    {
-        if (APP_enuAppend(&APP_buffer, key) == APP_OK)
+        if ((APP_buffer.isResult == 1U) && (key != APP_KEY_EQUALS))
         {
+            APP_buffer.index     = 0U;
+            APP_buffer.text[0]   = '\0';
+            APP_buffer.isR1Clear = 1U;
+            APP_buffer.isResult  = 0U;
             APP_buffer.isChanged = 1U;
         }
-    }
-    else if (key == APP_KEY_EQUALS)
-    {
-        int32_t        result = 0;
-        char           out[APP_INT_STR_LEN];
-        CALC_errCode_t error = CALC_enuEvaluate(APP_buffer.text, &result);
-        if (error == CALC_OK)
+        if (key == APP_KEY_SHIFT)
         {
-            APP_vIntToString(result, out);
-            APP_vDrawRow(1U, out);
+            APP_buffer.isShift = 1U;
         }
-        else if (error < CALC_ERROR_COUNT)
+        else if (APP_buffer.isShift == 1U)
         {
-            APP_vDrawRow(1U, APP_errMsg[error]);
+            APP_action_t act = APP_enuShiftLookup(key);
+            switch (act)
+            {
+            case APP_ACTION_LPAREN:
+            {
+                (void)APP_enuAppend(&APP_buffer, '(');
+                break;
+            }
+            case APP_ACTION_RPAREN:
+            {
+                (void)APP_enuAppend(&APP_buffer, ')');
+                break;
+            }
+            case APP_ACTION_BACKSPACE:
+            {
+                (void)APP_enuBackspace(&APP_buffer);
+                break;
+            }
+            case APP_ACTION_CLEAR:
+            {
+                APP_buffer.index     = 0U;
+                APP_buffer.text[0]   = '\0';
+                APP_buffer.isR1Clear = 1U;
+                break;
+            }
+
+            default:
+            {
+
+                break;
+            }
+            }
+            APP_buffer.isShift   = 0U;
+            APP_buffer.isChanged = 1U;
         }
-        APP_buffer.isResult = 1U;
+        else if (APP_u8IsAppendable(key) == 1U)
+        {
+            if (APP_enuAppend(&APP_buffer, key) == APP_OK)
+            {
+                APP_buffer.isChanged = 1U;
+            }
+        }
+        else if (key == APP_KEY_EQUALS)
+        {
+            int32_t        result = 0;
+            char           out[APP_INT_STR_LEN];
+            CALC_errCode_t error = CALC_enuEvaluate(APP_buffer.text, &result);
+            if (error == CALC_OK)
+            {
+                APP_vIntToString(result, out);
+                APP_vDrawRow(1U, out);
+            }
+            else if (error < CALC_ERROR_COUNT)
+            {
+                APP_vDrawRow(1U, APP_errMsg[error]);
+            }
+            APP_buffer.isResult = 1U;
+        }
     }
     if (APP_buffer.isChanged == 1U)
     {
@@ -268,4 +322,19 @@ static void APP_vDrawRow(uint8_t row, const char *str)
             HLCD_enuWriteChar(HLCD_MAIN, ' ');
         }
     }
+}
+
+static APP_action_t APP_enuShiftLookup(char key)
+{
+    APP_action_t action = APP_ACTION_NONE;
+    uint8_t      found  = 0U;
+    for (uint32_t i = 0U; (i < APP_SHIFT_LAYER_COUNT) && (found == 0U); i++)
+    {
+        if (APP_shiftLayer[i].key == key)
+        {
+            action = APP_shiftLayer[i].action;
+            found  = 1U;
+        }
+    }
+    return action;
 }

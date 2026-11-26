@@ -3,7 +3,7 @@
 
 typedef enum
 {
-    UART_DEBUG,
+    UART_DEBUG = 0U,
     UART_COUNT
 }UART_id_t;
 

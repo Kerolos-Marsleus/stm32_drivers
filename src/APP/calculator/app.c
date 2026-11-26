@@ -10,12 +10,6 @@
 #define APP_SHIFT_KEY_COUNT 4U
 #define APP_INT_STR_LEN     12U
 #define APP_LCD_COLS        16U
-typedef enum
-{
-    APP_STATE_TYPING = 0,
-    APP_STATE_RESULT,
-    APP_STATE_COUNT
-} APP_state_t;
 
 typedef enum
 {
@@ -36,6 +30,8 @@ typedef struct
     char     text[APP_BUFFER_LENGTH];
     uint32_t index;
     uint8_t  isChanged;
+    uint8_t  isResult;
+    uint8_t  isR1Clear;
 
 } APP_buffer_t;
 
@@ -109,6 +105,14 @@ void APP_vRunnable(void)
     {
         APP_vErrorHandler();
     }
+    if ((key != '\0') && (APP_buffer.isResult == 1U) && (key != APP_KEY_EQUALS))
+    {
+        APP_buffer.index     = 0U;
+        APP_buffer.text[0]   = '\0';
+        APP_buffer.isR1Clear = 1U;
+        APP_buffer.isResult  = 0U;
+        APP_buffer.isChanged = 1U;
+    }
     if (APP_u8IsAppendable(key) == 1U)
     {
         if (APP_enuAppend(&APP_buffer, key) == APP_OK)
@@ -130,11 +134,17 @@ void APP_vRunnable(void)
         {
             APP_vDrawRow(1U, APP_errMsg[error]);
         }
+        APP_buffer.isResult = 1U;
     }
     if (APP_buffer.isChanged == 1U)
     {
         APP_vDrawRow(0U, APP_buffer.text);
         APP_buffer.isChanged = 0U;
+    }
+    else if (APP_buffer.isR1Clear == 1U)
+    {
+        APP_vDrawRow(1U, "");
+        APP_buffer.isR1Clear = 0U;
     }
 }
 

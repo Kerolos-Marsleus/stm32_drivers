@@ -4,7 +4,9 @@
 
 typedef enum
 { 
-    // SCHED_RUN_DMA_TEST = 0, /* highest pri */
+    SCHED_RUN_HLCD = 0, /* highest pri*/
+    SCHED_RUN_HKEYPAD,
+    SCHED_RUN_CALCULATOR_APP,
     SCHED_RUNNABLE_COUNT
 }SCHED_runnableId_t;
 

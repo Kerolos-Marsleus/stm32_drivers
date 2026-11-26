@@ -20,3 +20,4 @@ UART RX: DMA + IDLE detection
 - [ ] SendBreak API (CR1.SBK) — needed for LIN headers
 - [ ] EIE (CR3) — report FE/NF/ORE errors during DMA RX
 - [ ] Config-selectable interrupt mask (error interrupts only; TXE/TC stay driver-owned)
+- [ ] HLCD: intermittent blank LCD at startup — find which start type fails (power-on / reset button / after flash)

@@ -21,3 +21,5 @@ UART RX: DMA + IDLE detection
 - [ ] EIE (CR3) — report FE/NF/ORE errors during DMA RX
 - [ ] Config-selectable interrupt mask (error interrupts only; TXE/TC stay driver-owned)
 - [ ] HLCD: intermittent blank LCD at startup — find which start type fails (power-on / reset button / after flash)
+- [ ] HLCD: framebuffer (2x16 shadow of DDRAM) so apps never hit the queue limit
+-NEXT (calculator): move R2/R3 → PB6/PB7 · add README/WIRING/wiring.svg · blank-file rebuild · merge to main
